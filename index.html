@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMA - Sistema Monitoreo de Acuerdos | Presidencia</title>
+    <!-- Tailwind CSS para estilos rápidos y responsivos -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome para iconos -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Chart.js para gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        presidencia: {
+                            900: '#1e293b',
+                            800: '#334155',
+                            700: '#475569',
+                            gold: '#ca8a04'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Transiciones suaves */
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Scrollbar personalizada */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 h-screen flex overflow-hidden font-sans">
+
+    <!-- Sidebar Navegación -->
+    <aside class="w-64 bg-presidencia-900 text-white flex flex-col transition-all duration-300 z-20">
+        <div class="p-6 flex items-center border-b border-slate-700">
+            <div class="w-10 h-10 bg-presidencia-gold rounded-full flex items-center justify-center mr-3 font-bold text-white shadow-lg">
+                <i class="..."></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg leading-tight">SMA</h1>
+                <p class="text-xs text-slate-400">Sistema de Monitoreo de Acuerdos</p>
+            </div>
+        </div>
+
+        <nav class="flex-1 py-4">
+            <ul class="space-y-1">
+                <li>
+                    <a href="#" onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn flex items-center px-6 py-3 text-slate-300 hover:bg-presidencia-800 hover:text-white bg-presidencia-800 border-l-4 border-presidencia-gold transition-colors">
+                        <i class="fa-solid fa-chart-line w-6"></i> Resumen Ejecutivo
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="switchTab('acuerdos')" id="nav-acuerdos" class="nav-btn flex items-center px-6 py-3 text-slate-300 hover:bg-presidencia-800 hover:text-white border-l-4 border-transparent transition-colors">
+                        <i class="fa-solid fa-handshake w-6"></i> Monitor de Acuerdos
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="switchTab('ministerios')" id="nav-ministerios" class="nav-btn flex items-center px-6 py-3 text-slate-300 hover:bg-presidencia-800 hover:text-white border-l-4 border-transparent transition-colors">
+                        <i class="fa-solid fa-users-gear w-6"></i> Gabinete Ministerial
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="switchTab('proximos')" id="nav-proximos" class="nav-btn flex items-center px-6 py-3 text-slate-300 hover:bg-presidencia-800 hover:text-white border-l-4 border-transparent transition-colors">
+                        <i class="fa-solid fa-calendar-check w-6"></i> Próximos Diálogos
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="p-4 bg-presidencia-800 text-xs text-slate-400 text-center">
+            <p>Usuario: Admin</p>
+            <p>Base de Datos: <span id="db-status" class="text-yellow-400 font-bold">Conectando...</span></p>
+            <p>Actualizado: <span id="current-time"></span></p>
+        </div>
+    </aside>
+
+    <!-- Contenido Principal -->
+    <main class="flex-1 flex flex-col h-full overflow-hidden relative">
+        
+        <!-- Header -->
+        <header class="bg-white shadow-sm h-16 flex items-center justify-between px-6 z-10">
+            <h2 class="text-xl font-bold text-slate-800" id="header-title">Resumen Ejecutivo </h2>
+            <div class="flex items-center space-x-4">
+                <span class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded flex items-center gap-1">
+                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                    Estado: Pacífico
+                </span>
+                <button class="text-slate-500 hover:text-presidencia-gold transition-colors relative">
+                    <i class="fa-solid fa-bell text-xl"></i>
+                    <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center">3</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Contenedor de Vistas -->
+        <div class="flex-1 overflow-y-auto p-6 bg-slate-100">
+            
+            <!-- VISTA: DASHBOARD -->
+            <div id="view-dashboard" class="view-section fade-in">
+                <!-- KPIs -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-blue-500">
+                        <h3 class="text-slate-500 text-sm font-semibold mb-1">Inversión Asignada</h3>
+                        <p class="text-2xl font-bold text-slate-800" id="kpi-presupuesto">...</p>
+                        <p class="text-xs text-slate-400 mt-2">Créditos CAF y TGN</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-emerald-500">
+                        <h3 class="text-slate-500 text-sm font-semibold mb-1">Acuerdos (Fases)</h3>
+                        <p class="text-2xl font-bold text-slate-800" id="kpi-cerrados">...</p>
+                        <p class="text-xs text-emerald-600 mt-2"><i class="fa-solid fa-check-double"></i> Pacificación Estratégica</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-amber-500">
+                        <h3 class="text-slate-500 text-sm font-semibold mb-1">Acuerdos en Ejecución</h3>
+                        <p class="text-2xl font-bold text-slate-800" id="kpi-ejecucion">...</p>
+                        <p class="text-xs text-slate-400 mt-2">Plazo COB: 90 días</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-red-500">
+                        <h3 class="text-slate-500 text-sm font-semibold mb-1">Tipo de Cambio (BCB)</h3>
+                        <p class="text-2xl font-bold text-slate-800">Bs 9.73</p>
+                        <p class="text-xs text-red-600 mt-2">Flexibilización del mercado</p>
+                    </div>
+                </div>
+
+                <!-- Gráficos y Tablas -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Avance Financiero -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-2">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4">Ejecución Financiera por Sector (Millones $us)</h3>
+                        <div class="relative h-64 w-full">
+                            <canvas id="budgetChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Alertas Rápidas -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4 text-red-600">
+                            <i class="fa-solid fa-triangle-exclamation"></i> Monitoreo de Riesgos y DS
+                        </h3>
+                        <ul class="space-y-4">
+                            <li class="p-3 bg-red-50 rounded-lg border border-red-100">
+                                <div class="flex justify-between items-start mb-1">
+                                    <span class="font-bold text-sm text-red-800">Trópico de Cochabamba</span>
+                                    <span class="text-xs bg-red-200 text-red-800 px-2 rounded">Alta</span>
+                                </div>
+                                <p class="text-xs text-slate-600">Facciones radicales evistas aisladas. Aplicación estricta del DS 5636 (Estado de Excepción).</p>
+                            </li>
+                            <li class="p-3 bg-amber-50 rounded-lg border border-amber-100">
+                                <div class="flex justify-between items-start mb-1">
+                                    <span class="font-bold text-sm text-amber-800">Asamblea Legislativa</span>
+                                    <span class="text-xs bg-amber-200 text-amber-800 px-2 rounded">Media</span>
+                                </div>
+                                <p class="text-xs text-slate-600">Pendiente aprobación de créditos CAF ($125M) logrados por Min. Obras Públicas.</p>
+                            </li>
+                            <li class="p-3 bg-blue-50 rounded-lg border border-blue-100">
+                                <div class="flex justify-between items-start mb-1">
+                                    <span class="font-bold text-sm text-blue-800">Sistema Financiero</span>
+                                    <span class="text-xs bg-blue-200 text-blue-800 px-2 rounded">Controlado</span>
+                                </div>
+                                <p class="text-xs text-slate-600">ASFI supervisando reprogramaciones bajo DS 5630. Retiro de depósitos fluyendo.</p>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VISTA: MONITOR DE ACUERDOS -->
+            <div id="view-acuerdos" class="view-section hidden fade-in">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-6">
+                    <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+                        <h3 class="text-lg font-bold text-slate-800">Monitor de Cumplimiento</h3>
+                        <div class="flex space-x-2 mt-4 md:mt-0">
+                            <input type="text" id="search-acuerdos" placeholder="Buscar acuerdo..." class="px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:border-presidencia-gold">
+                            <select class="px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none" id="filter-status">
+                                <option value="all">Todos los estados</option>
+                                <option value="completado">Completado</option>
+                                <option value="ejecucion">En Ejecución</option>
+                                <option value="retraso">Con Retraso</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 text-slate-500 text-sm uppercase tracking-wider">
+                                    <th class="p-3 border-b border-slate-200 font-semibold">Sector / Convenio</th>
+                                    <th class="p-3 border-b border-slate-200 font-semibold">Ministerio Responsable</th>
+                                    <th class="p-3 border-b border-slate-200 font-semibold">Presupuesto</th>
+                                    <th class="p-3 border-b border-slate-200 font-semibold w-1/4">Avance</th>
+                                    <th class="p-3 border-b border-slate-200 font-semibold">Estado</th>
+                                    <th class="p-3 border-b border-slate-200 font-semibold text-center">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="acuerdos-tbody" class="text-sm">
+                                <!-- Llenado por JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VISTA: MINISTERIOS -->
+            <div id="view-ministerios" class="view-section hidden fade-in">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="ministerios-grid">
+                    <!-- Llenado por JS -->
+                </div>
+            </div>
+
+            <!-- VISTA: PROXIMOS DIALOGOS -->
+            <div id="view-proximos" class="view-section hidden fade-in">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-lg font-bold text-slate-800 mb-6">Agenda Presidencial de Diálogo</h3>
+                    
+                    <div class="relative border-l-2 border-slate-200 ml-4 space-y-8" id="agenda-timeline">
+                        <!-- Llenado por JS -->
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Modal Detalles (Oculto por defecto) -->
+    <div id="detail-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-50 z-[60] flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-6 relative">
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-800">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            <h2 id="modal-title" class="text-2xl font-bold text-slate-800 mb-2">Detalle del Acuerdo</h2>
+            <p id="modal-sector" class="text-presidencia-gold font-semibold text-sm mb-4">Sector</p>
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-slate-50 p-3 rounded border border-slate-200">
+                    <p class="text-xs text-slate-500 mb-1">Monto Asignado</p>
+                    <p id="modal-monto" class="font-bold text-lg text-slate-800"></p>
+                </div>
+                <div class="bg-slate-50 p-3 rounded border border-slate-200">
+                    <p class="text-xs text-slate-500 mb-1">Ministerio Ejecutor</p>
+                    <p id="modal-ministerio" class="font-bold text-sm text-slate-800"></p>
+                </div>
+            </div>
+            
+            <h4 class="font-bold text-slate-700 mb-2 border-b pb-1">Compromisos Específicos</h4>
+            <ul id="modal-compromisos" class="list-disc pl-5 space-y-2 text-sm text-slate-600 mb-6">
+            </ul>
+
+            <div class="flex justify-end space-x-3">
+                <button class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded transition" onclick="closeModal()">Cerrar</button>
+                <a id="modal-acta-btn" href="#" target="_blank" class="px-4 py-2 bg-presidencia-900 hover:bg-presidencia-800 text-white rounded transition flex items-center">
+                    <i class="fa-solid fa-file-pdf mr-2"></i>Ver Documento
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Ministerio (Oculto por defecto) -->
+    <div id="ministerio-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-3xl w-full p-6 relative max-h-[90vh] flex flex-col">
+            <button onclick="closeMinisterioModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-800">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            
+            <div class="flex items-center mb-6 border-b border-slate-100 pb-4">
+                <div id="min-modal-icon" class="w-12 h-12 bg-slate-100 text-presidencia-800 rounded-full flex items-center justify-center text-xl mr-4 shadow-sm">
+                    <i class="fa-solid fa-building"></i>
+                </div>
+                <div>
+                    <h2 id="min-modal-title" class="text-2xl font-bold text-slate-800">Ministerio</h2>
+                    <p id="min-modal-titular" class="text-slate-500 font-medium text-sm mt-1"></p>
+                </div>
+            </div>
+
+            <h4 class="font-bold text-slate-700 mb-3 border-l-4 border-presidencia-gold pl-2">Acuerdos y Compromisos Bajo su Gestión</h4>
+            
+            <div class="overflow-y-auto flex-1 pr-2">
+                <div id="min-modal-acuerdos-list" class="space-y-4">
+                    <!-- Llenado por JS -->
+                </div>
+            </div>
+
+            <div class="mt-6 pt-4 border-t border-slate-100 flex justify-end">
+                <button class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded transition font-medium" onclick="closeMinisterioModal()">Cerrar Panel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lógica de la Aplicación -->
+    <script>
+        // =====================================================================
+        //  "Acuerdos", "Ministerios", "Dialogos".
+        // // =====================================================================
+        const SPREADSHEET_ID = 'TU_ID_DE_GOOGLE_SHEETS_AQUI'; 
+
+        // Variables de estado dinámicas
+        let datosAcuerdos = [];
+        let ministerios = [];
+        let proximosDialogos = [];
+        let chartInstance = null;
+
+        // Base de datos de respaldo fiel al "Informe de Análisis Político y Estratégico (2026)"
+        const backupAcuerdos = [
+            { id: "A1", sector: "Autotransporte", titulo: "Garantía Máxima y Mantenimiento Vial", ministerio: "Obras Públicas / Hidrocarburos", monto: 125, avance: 80, estado: "ejecucion", compromisos: ["Auditoría de carburantes por la UMSA en frontera.", "Crédito CAF de $125M para conservación vial.", "Comisión YPFB-Aseguradoras para resarcimiento."], acta: "https://www.oopp.gob.bo/wp-content/uploads/2026/acta_transporte.pdf" },
+            { id: "A2", sector: "Magisterio", titulo: "Bono de Gestión y Contención Fiscal", ministerio: "Educación / Economía", monto: 0, avance: 100, estado: "completado", compromisos: ["Creación del Bono de Gestión de Aula (Bs 2.400 anual).", "Creación de 384.000 horas para docentes y 1.000 ítems administrativos.", "Restitución de subsidio de zona/frontera."], acta: "https://www.minedu.gob.bo/acta_magisterio.pdf" },
+            { id: "A3", sector: "Campesinos (Caranavi)", titulo: "Desarrollo Provincial y Fragmentación", ministerio: "Presidencia", monto: 85, avance: 40, estado: "ejecucion", compromisos: ["Comisión Especial de Desarrollo e Integración de La Paz.", "Mejora ruta troncal Santa Bárbara-Caranavi y puentes.", "Planes de electrificación rural y vivienda social."], acta: "#" },
+            { id: "A4", sector: "Central Obrera Boliviana (COB)", titulo: "Pacto Máster de Pacificación (8 Ejes)", ministerio: "Economía", monto: 0, avance: 15, estado: "ejecucion", compromisos: ["Mesa técnica para Pacto Fiscal (Modelo 50/50).", "Garantía de no privatización de empresas públicas.", "Revisión a la Ley de Pensiones y comisiones de investigación."], acta: "#" },
+            { id: "A5", sector: "Sectores Productivos", titulo: "Alivio Financiero - DS 5630", ministerio: "Economía", monto: 0, avance: 100, estado: "completado", compromisos: ["Periodo de gracia de hasta 6 meses (DS 5630).", "Supervisión ASFI para evitar recalificación de riesgo.", "Mantenimiento de tasas de interés originales."], acta: "https://bolivia.infoleyes.com/norma/8656/decreto-supremo-5630" },
+            { id: "A6", sector: "Seguridad Interna", titulo: "Estado de Excepción - DS 5636", ministerio: "Gobierno", monto: 0, avance: 100, estado: "completado", compromisos: ["Despliegue focalizado de Fuerzas Armadas y Policía.", "Inmovilización vial y restricción de reuniones.", "Desarme ciudadano y control en zonas rojas (Cochabamba)."], acta: "http://www.gacetaoficialdebolivia.gob.bo/normas/verGratis_gob/281250" }
+        ];
+
+        const backupMinisterios = [
+            { nombre: "Ministerio de la Presidencia", titular: "José Luis Lupo", acuerdosAsignados: 1, presupuestoManejado: 85, icono: "fa-handshake" },
+            { nombre: "Ministerio de Economía", titular: "José Gabriel Espinoza", acuerdosAsignados: 3, presupuestoManejado: 0, icono: "fa-chart-pie" },
+            { nombre: "Min. de Obras Públicas", titular: "Mauricio Zamora", acuerdosAsignados: 1, presupuestoManejado: 125, icono: "fa-road" },
+            { nombre: "Ministerio de Educación", titular: "Erick Sanjinez Chavez", acuerdosAsignados: 1, presupuestoManejado: 0, icono: "fa-chalkboard-user" },
+            { nombre: "Ministerio de Gobierno", titular: "Marco Antonio Oviedo", acuerdosAsignados: 1, presupuestoManejado: 0, icono: "fa-shield-halved" },
+            { nombre: "Ministerio de Hidrocarburos", titular: "Carlos Blanco", acuerdosAsignados: 1, presupuestoManejado: 0, icono: "fa-gas-pump" },
+            { nombre: "Ministerio de Trabajo", titular: "Williams José Bascopé", acuerdosAsignados: 0, presupuestoManejado: 0, icono: "fa-hard-hat" }
+        ];
+
+        const backupDialogos = [
+            { fecha: "Día 1 - Post Crisis", sector: "Central Obrera Boliviana (COB)", tema: "Instalación de la Mesa Técnica Pacto Fiscal 50/50", estado: "Confirmado" },
+            { fecha: "Día 15 - Post Crisis", sector: "Gremiales, Artesanos, Pymes", tema: "Evaluación refinanciamiento bajo DS 5630", estado: "Pendiente" },
+            { fecha: "Evaluación 90 Días", sector: "FF.AA. y Policía", tema: "Fin del Estado de Excepción (DS 5636)", estado: "Pendiente" }
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateTime();
+            setInterval(updateTime, 60000); 
+            
+            document.getElementById('search-acuerdos').addEventListener('input', filterAcuerdos);
+            document.getElementById('filter-status').addEventListener('change', filterAcuerdos);
+            
+            initData();
+        });
+
+        function updateTime() {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute:'2-digit' };
+            document.getElementById('current-time').textContent = now.toLocaleDateString('es-ES', options);
+        }
+
+        async function fetchGoogleSheet(sheetName) {
+            const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
+            const res = await fetch(url);
+            const text = await res.text();
+            
+            // Extraer JSON crudo devuelto por Google Query API
+            const start = text.indexOf('{');
+            const end = text.lastIndexOf('}');
+            const jsonString = text.substring(start, end + 1);
+            const data = JSON.parse(jsonString);
+            return data.table.rows;
+        }
+
+        async function initData() {
+            const statusEl = document.getElementById('db-status');
+            
+            if (SPREADSHEET_ID === 'TU_ID_DE_GOOGLE_SHEETS_AQUI') {
+                statusEl.textContent = 'Modo Local ';
+                statusEl.className = 'text-blue-400 font-bold';
+                cargarRespaldos();
+                renderAll();
+                return;
+            }
+
+            try {
+                // Fetch concurrente de las 3 hojas
+                const [rowsAcuerdos, rowsMin, rowsDial] = await Promise.all([
+                    fetchGoogleSheet('Acuerdos'),
+                    fetchGoogleSheet('Ministerios'),
+                    fetchGoogleSheet('Dialogos')
+                ]);
+                
+                // Mapeo Hoja "Acuerdos" (Columnas: ID, Sector, Titulo, Min, Monto, Avance, Estado, Compromisos, ActaPDF)
+                datosAcuerdos = rowsAcuerdos.map(row => {
+                    const c = row.c;
+                    return {
+                        id: c[0] && c[0].v ? c[0].v : Math.random(),
+                        sector: c[1] && c[1].v ? c[1].v : '',
+                        titulo: c[2] && c[2].v ? c[2].v : '',
+                        ministerio: c[3] && c[3].v ? c[3].v : '',
+                        monto: c[4] && c[4].v ? parseFloat(c[4].v) : 0,
+                        avance: c[5] && c[5].v ? parseInt(c[5].v) : 0,
+                        estado: c[6] && c[6].v ? c[6].v.toLowerCase().trim() : 'pendiente',
+                        compromisos: c[7] && c[7].v ? c[7].v.toString().split('|').map(s=>s.trim()) : [],
+                        acta: c[8] && c[8].v ? c[8].v : '#'
+                    };
+                });
+
+                // Mapeo Hoja "Ministerios" (Columnas: Nombre, Titular, Acuerdos, Presupuesto, Icono)
+                ministerios = rowsMin.map(row => {
+                    const c = row.c;
+                    return {
+                        nombre: c[0] && c[0].v ? c[0].v : '',
+                        titular: c[1] && c[1].v ? c[1].v : '',
+                        acuerdosAsignados: c[2] && c[2].v ? parseInt(c[2].v) : 0,
+                        presupuestoManejado: c[3] && c[3].v ? parseFloat(c[3].v) : 0,
+                        icono: c[4] && c[4].v ? c[4].v : 'fa-building'
+                    };
+                });
+
+                // Mapeo Hoja "Dialogos" (Columnas: Fecha, Sector, Tema, Estado)
+                proximosDialogos = rowsDial.map(row => {
+                    const c = row.c;
+                    return {
+                        fecha: c[0] && c[0].v ? c[0].v : '',
+                        sector: c[1] && c[1].v ? c[1].v : '',
+                        tema: c[2] && c[2].v ? c[2].v : '',
+                        estado: c[3] && c[3].v ? c[3].v : 'Pendiente'
+                    };
+                });
+                
+                statusEl.textContent = 'En Línea (G-Sheets)';
+                statusEl.className = 'text-emerald-400 font-bold';
+            } catch (error) {
+                console.error("Error conectando con Google Sheets. Usando datos de respaldo.", error);
+                statusEl.textContent = 'Error BD (Usando Respaldo)';
+                statusEl.className = 'text-red-400 font-bold';
+                cargarRespaldos();
+            }
+            
+            renderAll();
+        }
+
+        function cargarRespaldos() {
+            datosAcuerdos = backupAcuerdos;
+            ministerios = backupMinisterios;
+            proximosDialogos = backupDialogos;
+        }
+
+        function renderAll() {
+            updateDashboardKPIs();
+            renderAcuerdosTable(datosAcuerdos);
+            renderMinisterios();
+            renderProximos();
+            initChart();
+        }
+
+        function updateDashboardKPIs() {
+            const totalPto = datosAcuerdos.reduce((acc, curr) => acc + (curr.monto || 0), 0);
+            const cerrados = datosAcuerdos.filter(a => a.estado === 'completado').length;
+            const total = datosAcuerdos.length;
+            const ejecucion = datosAcuerdos.filter(a => a.estado === 'ejecucion').length;
+            const alerta = datosAcuerdos.filter(a => a.estado === 'retraso').length;
+
+            document.getElementById('kpi-presupuesto').textContent = `$us ${totalPto.toFixed(1)} M`;
+            document.getElementById('kpi-cerrados').textContent = `${cerrados} / ${total}`;
+            document.getElementById('kpi-ejecucion').textContent = ejecucion;
+            
+            const kpiAlertaEl = document.getElementById('kpi-alerta');
+            if(kpiAlertaEl) kpiAlertaEl.textContent = alerta;
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+            
+            document.querySelectorAll('.nav-btn').forEach(el => {
+                el.classList.remove('bg-presidencia-800', 'text-white', 'border-l-4', 'border-presidencia-gold');
+                el.classList.add('border-transparent');
+            });
+
+            document.getElementById(`view-${tabId}`).classList.remove('hidden');
+            
+            const activeBtn = document.getElementById(`nav-${tabId}`);
+            activeBtn.classList.add('bg-presidencia-800', 'text-white', 'border-l-4', 'border-presidencia-gold');
+            activeBtn.classList.remove('border-transparent');
+
+            const titles = {
+                'dashboard': 'Resumen Ejecutivo - Post Crisis',
+                'acuerdos': 'Monitor de Cumplimiento de Acuerdos',
+                'ministerios': 'Gabinete Ministerial y Desempeño',
+                'proximos': 'Agenda Presidencial de Diálogos'
+            };
+            document.getElementById('header-title').textContent = titles[tabId];
+        }
+
+        function renderAcuerdosTable(data) {
+            const tbody = document.getElementById('acuerdos-tbody');
+            tbody.innerHTML = '';
+
+            data.forEach(item => {
+                let statusBadge = '';
+                let progressColor = '';
+                
+                if (item.estado === 'completado') {
+                    statusBadge = '<span class="bg-emerald-100 text-emerald-800 px-2 py-1 rounded text-xs font-semibold">Completado</span>';
+                    progressColor = 'bg-emerald-500';
+                } else if (item.estado === 'ejecucion') {
+                    statusBadge = '<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-semibold">En Ejecución</span>';
+                    progressColor = 'bg-blue-500';
+                } else {
+                    statusBadge = '<span class="bg-red-100 text-red-800 px-2 py-1 rounded text-xs font-semibold">Retraso</span>';
+                    progressColor = 'bg-red-500';
+                }
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 border-b border-slate-100 transition';
+                tr.innerHTML = `
+                    <td class="p-3">
+                        <p class="font-bold text-slate-800">${item.sector}</p>
+                        <p class="text-xs text-slate-500">${item.titulo}</p>
+                    </td>
+                    <td class="p-3 text-slate-600">${item.ministerio}</td>
+                    <td class="p-3 font-semibold text-slate-700">$us ${item.monto} M</td>
+                    <td class="p-3">
+                        <div class="flex items-center gap-2">
+                            <div class="w-full bg-slate-200 rounded-full h-2.5">
+                                <div class="${progressColor} h-2.5 rounded-full transition-all duration-1000" style="width: ${item.avance}%"></div>
+                            </div>
+                            <span class="text-xs font-bold text-slate-600">${item.avance}%</span>
+                        </div>
+                    </td>
+                    <td class="p-3">${statusBadge}</td>
+                    <td class="p-3 text-center">
+                        <button onclick="openModal('${item.id}')" class="text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-2 rounded transition">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filterAcuerdos() {
+            const searchTerm = document.getElementById('search-acuerdos').value.toLowerCase();
+            const statusFilter = document.getElementById('filter-status').value;
+
+            const filteredData = datosAcuerdos.filter(item => {
+                const matchesSearch = item.sector.toLowerCase().includes(searchTerm) || item.titulo.toLowerCase().includes(searchTerm);
+                const matchesStatus = statusFilter === 'all' || item.estado === statusFilter;
+                return matchesSearch && matchesStatus;
+            });
+
+            renderAcuerdosTable(filteredData);
+        }
+
+        function renderMinisterios() {
+            const grid = document.getElementById('ministerios-grid');
+            grid.innerHTML = '';
+
+            ministerios.forEach(min => {
+                grid.innerHTML += `
+                    <div onclick="openMinisterioModal('${min.nombre}')" class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col items-center text-center hover:shadow-md hover:border-presidencia-gold cursor-pointer transition transform hover:-translate-y-1">
+                        <div class="w-16 h-16 bg-slate-100 text-presidencia-800 rounded-full flex items-center justify-center text-2xl mb-4">
+                            <i class="fa-solid ${min.icono}"></i>
+                        </div>
+                        <h3 class="font-bold text-lg text-slate-800 mb-1">${min.nombre}</h3>
+                        <p class="text-sm text-slate-500 mb-4">${min.titular}</p>
+                        
+                        <div class="w-full grid grid-cols-2 gap-2 mt-auto border-t border-slate-100 pt-4">
+                            <div>
+                                <p class="text-xs text-slate-400">Acuerdos Activos</p>
+                                <p class="font-bold text-slate-700">${min.acuerdosAsignados}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-slate-400">Pto. (MM USD)</p>
+                                <p class="font-bold text-slate-700">$${min.presupuestoManejado}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function renderProximos() {
+            const timeline = document.getElementById('agenda-timeline');
+            timeline.innerHTML = '';
+
+            proximosDialogos.forEach((dialogo, index) => {
+                const isConfirmado = dialogo.estado.toLowerCase() === 'confirmado';
+                const badgeColor = isConfirmado ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800';
+                
+                timeline.innerHTML += `
+                    <div class="relative pl-6">
+                        <div class="absolute w-4 h-4 bg-presidencia-gold rounded-full -left-[9px] top-1 border-4 border-white"></div>
+                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 hover:shadow-sm transition">
+                            <span class="text-xs font-bold text-presidencia-gold mb-1 block">${dialogo.fecha}</span>
+                            <h4 class="font-bold text-slate-800 text-lg">${dialogo.sector}</h4>
+                            <p class="text-sm text-slate-600 mt-1"><i class="fa-solid fa-comments text-slate-400 mr-1"></i> ${dialogo.tema}</p>
+                            <div class="mt-3">
+                                <span class="px-2 py-1 rounded text-xs font-semibold ${badgeColor}">${dialogo.estado}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function openModal(id) {
+            const acuerdo = datosAcuerdos.find(a => a.id.toString() === id.toString());
+            if (!acuerdo) return;
+
+            document.getElementById('modal-title').textContent = acuerdo.titulo;
+            document.getElementById('modal-sector').textContent = acuerdo.sector;
+            document.getElementById('modal-monto').textContent = `$us ${acuerdo.monto} Millones`;
+            document.getElementById('modal-ministerio').innerHTML = `<i class="fa-solid fa-building text-slate-400 mr-1"></i> ${acuerdo.ministerio}`;
+            
+            const lista = document.getElementById('modal-compromisos');
+            lista.innerHTML = '';
+            acuerdo.compromisos.forEach(c => {
+                if(c.trim() !== "") lista.innerHTML += `<li>${c}</li>`;
+            });
+
+            // Lógica para mostrar u ocultar el botón del PDF
+            const btnActa = document.getElementById('modal-acta-btn');
+            if (acuerdo.acta && acuerdo.acta !== '#' && acuerdo.acta.trim() !== '') {
+                btnActa.href = acuerdo.acta;
+                btnActa.classList.remove('hidden');
+                btnActa.classList.add('flex');
+            } else {
+                btnActa.classList.add('hidden');
+                btnActa.classList.remove('flex');
+            }
+
+            document.getElementById('detail-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('detail-modal').classList.add('hidden');
+        }
+
+        document.getElementById('detail-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        function openMinisterioModal(nombreMinisterio) {
+            const min = ministerios.find(m => m.nombre === nombreMinisterio);
+            if (!min) return;
+
+            // Llenar cabecera del modal
+            document.getElementById('min-modal-title').textContent = min.nombre;
+            document.getElementById('min-modal-titular').innerHTML = `<i class="fa-solid fa-user-tie mr-1"></i> ${min.titular}`;
+            document.getElementById('min-modal-icon').innerHTML = `<i class="fa-solid ${min.icono}"></i>`;
+
+            // Mapeo inteligente de palabras clave para vincular ministerios con acuerdos
+            const keywordMap = {
+                "Ministerio de la Presidencia": "Presidencia",
+                "Ministerio de Economía": "Economía",
+                "Min. de Obras Públicas": "Obras",
+                "Ministerio de Educación": "Educación",
+                "Ministerio de Gobierno": "Gobierno",
+                "Ministerio de Hidrocarburos": "Hidrocarburos",
+                "Ministerio de Trabajo": "Trabajo"
+            };
+            
+            const keyword = keywordMap[min.nombre] || min.nombre;
+            
+            // Filtrar acuerdos que incluyan la palabra clave en el campo ministerio
+            const acuerdosFiltrados = datosAcuerdos.filter(a => a.ministerio.includes(keyword));
+            
+            const lista = document.getElementById('min-modal-acuerdos-list');
+            lista.innerHTML = '';
+
+            if (acuerdosFiltrados.length === 0) {
+                lista.innerHTML = `
+                    <div class="p-8 bg-slate-50 rounded-lg text-center border border-slate-200 mt-4">
+                        <i class="fa-solid fa-folder-open text-slate-300 text-4xl mb-3"></i>
+                        <p class="text-slate-500 text-sm font-medium">No hay acuerdos directos registrados bajo la gestión de este ministerio en este momento.</p>
+                    </div>`;
+            } else {
+                acuerdosFiltrados.forEach(acuerdo => {
+                    let statusBadge = '';
+                    let progressColor = '';
+                    if (acuerdo.estado === 'completado') {
+                        statusBadge = '<span class="bg-emerald-100 text-emerald-800 px-2 py-1 rounded text-xs font-semibold">Completado</span>';
+                        progressColor = 'bg-emerald-500';
+                    } else if (acuerdo.estado === 'ejecucion') {
+                        statusBadge = '<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-semibold">En Ejecución</span>';
+                        progressColor = 'bg-blue-500';
+                    } else {
+                        statusBadge = '<span class="bg-red-100 text-red-800 px-2 py-1 rounded text-xs font-semibold">Retraso</span>';
+                        progressColor = 'bg-red-500';
+                    }
+
+                    // Se puede hacer clic en la tarjeta del acuerdo para abrir su detalle específico
+                    lista.innerHTML += `
+                        <div class="border border-slate-200 rounded-lg p-4 bg-white hover:border-blue-400 hover:shadow-md transition cursor-pointer relative overflow-hidden group" onclick="openModal('${acuerdo.id}')">
+                            <div class="absolute right-0 top-0 h-full w-1 bg-blue-500 transform translate-x-1 group-hover:translate-x-0 transition"></div>
+                            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-3 gap-2">
+                                <div>
+                                    <h5 class="font-bold text-slate-800 text-sm">${acuerdo.sector}</h5>
+                                    <p class="text-xs text-slate-500 mt-1 line-clamp-1">${acuerdo.titulo}</p>
+                                </div>
+                                <div class="shrink-0">${statusBadge}</div>
+                            </div>
+                            <div class="flex items-center gap-4 mt-2 p-2 bg-slate-50 rounded">
+                                <div class="text-xs font-semibold text-slate-700 whitespace-nowrap">
+                                    <i class="fa-solid fa-sack-dollar text-slate-400 mr-1"></i> $us ${acuerdo.monto} M
+                                </div>
+                                <div class="flex-1 flex items-center gap-2">
+                                    <div class="w-full bg-slate-200 rounded-full h-1.5">
+                                        <div class="${progressColor} h-1.5 rounded-full" style="width: ${acuerdo.avance}%"></div>
+                                    </div>
+                                    <span class="text-[10px] font-bold text-slate-500 w-6">${acuerdo.avance}%</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            document.getElementById('ministerio-modal').classList.remove('hidden');
+        }
+
+        function closeMinisterioModal() {
+            document.getElementById('ministerio-modal').classList.add('hidden');
+        }
+
+        document.getElementById('ministerio-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeMinisterioModal();
+        });
+
+        function initChart() {
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            const ctx = document.getElementById('budgetChart').getContext('2d');
+            const labels = datosAcuerdos.map(a => a.sector.substring(0, 15) + '...');
+            const datos = datosAcuerdos.map(a => a.monto);
+
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Presupuesto Asignado (Millones $us)',
+                        data: datos,
+                        backgroundColor: '#3b82f6', 
+                        borderRadius: 4,
+                        barThickness: 30
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#f1f5f9' }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
