@@ -37,7 +37,7 @@
             to { opacity: 1; transform: translateY(0); }
         }
         /* Scrollbar personalizada */
-        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
@@ -45,19 +45,25 @@
 </head>
 <body class="bg-slate-50 text-slate-800 h-screen flex overflow-hidden font-sans">
 
+    <!-- Overlay oscuro para móviles -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-slate-900 bg-opacity-50 z-30 hidden md:hidden transition-opacity" onclick="toggleSidebar()"></div>
+
     <!-- Sidebar Navegación -->
-    <aside class="w-64 bg-presidencia-900 text-white flex flex-col transition-all duration-300 z-20">
-        <div class="p-6 flex items-center border-b border-slate-700">
-            <div class="w-10 h-10 bg-presidencia-gold rounded-full flex items-center justify-center mr-3 font-bold text-white shadow-lg">
-                <i class="..."></i>
+    <aside id="sidebar" class="w-64 bg-presidencia-900 text-white flex flex-col transition-transform duration-300 z-40 fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 h-full shadow-2xl md:shadow-none">
+        <div class="p-6 flex items-center border-b border-slate-700 relative">
+            <div class="w-10 h-10 bg-presidencia-gold rounded-full flex items-center justify-center mr-3 font-bold text-white shadow-lg shrink-0">
+                <i class="fa-solid fa-building-columns"></i>
             </div>
             <div>
                 <h1 class="font-bold text-lg leading-tight">SMA</h1>
                 <p class="text-xs text-slate-400">Sistema de Monitoreo de Acuerdos</p>
             </div>
+            <button onclick="toggleSidebar()" class="md:hidden absolute top-4 right-4 text-slate-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
         </div>
 
-        <nav class="flex-1 py-4">
+        <nav class="flex-1 py-4 overflow-y-auto">
             <ul class="space-y-1">
                 <li>
                     <a href="#" onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn flex items-center px-6 py-3 text-slate-300 hover:bg-presidencia-800 hover:text-white bg-presidencia-800 border-l-4 border-presidencia-gold transition-colors">
@@ -90,88 +96,94 @@
     </aside>
 
     <!-- Contenido Principal -->
-    <main class="flex-1 flex flex-col h-full overflow-hidden relative">
+    <main class="flex-1 flex flex-col h-full overflow-hidden relative w-full">
         
         <!-- Header -->
-        <header class="bg-white shadow-sm h-16 flex items-center justify-between px-6 z-10">
-            <h2 class="text-xl font-bold text-slate-800" id="header-title">Resumen Ejecutivo </h2>
-            <div class="flex items-center space-x-4">
-                <span class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded flex items-center gap-1">
-                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                    Estado: Pacífico
+        <header class="bg-white shadow-sm h-16 flex items-center justify-between px-4 md:px-6 z-10 shrink-0">
+            <div class="flex items-center gap-3">
+                <button onclick="toggleSidebar()" class="md:hidden text-slate-500 hover:text-presidencia-gold focus:outline-none">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+                <h2 class="text-sm md:text-xl font-bold text-slate-800 line-clamp-1" id="header-title">Resumen Ejecutivo </h2>
+            </div>
+            <div class="flex items-center space-x-2 md:space-x-4 shrink-0">
+                <span class="bg-green-100 text-green-800 text-[10px] md:text-xs font-semibold px-2 md:px-2.5 py-0.5 rounded flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-green-500 animate-pulse"></span>
+                    <span class="hidden sm:inline">Estado: Pacífico</span>
+                    <span class="sm:hidden">Pacífico</span>
                 </span>
-                <button class="text-slate-500 hover:text-presidencia-gold transition-colors relative">
-                    <i class="fa-solid fa-bell text-xl"></i>
-                    <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center">3</span>
+                <button class="text-slate-500 hover:text-presidencia-gold transition-colors relative p-1 md:p-0">
+                    <i class="fa-solid fa-bell text-lg md:text-xl"></i>
+                    <span class="absolute top-0 right-0 md:-top-1 md:-right-1 bg-red-500 text-white text-[9px] md:text-[10px] rounded-full h-3 w-3 md:h-4 md:w-4 flex items-center justify-center">3</span>
                 </button>
             </div>
         </header>
 
         <!-- Contenedor de Vistas -->
-        <div class="flex-1 overflow-y-auto p-6 bg-slate-100">
+        <div class="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-100">
             
             <!-- VISTA: DASHBOARD -->
             <div id="view-dashboard" class="view-section fade-in">
                 <!-- KPIs -->
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-blue-500">
-                        <h3 class="text-slate-500 text-sm font-semibold mb-1">Inversión Asignada</h3>
-                        <p class="text-2xl font-bold text-slate-800" id="kpi-presupuesto">...</p>
-                        <p class="text-xs text-slate-400 mt-2">Créditos CAF y TGN</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6">
+                    <div class="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-blue-500">
+                        <h3 class="text-slate-500 text-xs md:text-sm font-semibold mb-1">Inversión Asignada</h3>
+                        <p class="text-xl md:text-2xl font-bold text-slate-800" id="kpi-presupuesto">...</p>
+                        <p class="text-[10px] md:text-xs text-slate-400 mt-2">Créditos CAF y TGN</p>
                     </div>
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-emerald-500">
-                        <h3 class="text-slate-500 text-sm font-semibold mb-1">Acuerdos (Fases)</h3>
-                        <p class="text-2xl font-bold text-slate-800" id="kpi-cerrados">...</p>
-                        <p class="text-xs text-emerald-600 mt-2"><i class="fa-solid fa-check-double"></i> Pacificación Estratégica</p>
+                    <div class="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-emerald-500">
+                        <h3 class="text-slate-500 text-xs md:text-sm font-semibold mb-1">Acuerdos (Fases)</h3>
+                        <p class="text-xl md:text-2xl font-bold text-slate-800" id="kpi-cerrados">...</p>
+                        <p class="text-[10px] md:text-xs text-emerald-600 mt-2"><i class="fa-solid fa-check-double"></i> Pacificación Estratégica</p>
                     </div>
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-amber-500">
-                        <h3 class="text-slate-500 text-sm font-semibold mb-1">Acuerdos en Ejecución</h3>
-                        <p class="text-2xl font-bold text-slate-800" id="kpi-ejecucion">...</p>
-                        <p class="text-xs text-slate-400 mt-2">Plazo COB: 90 días</p>
+                    <div class="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-amber-500">
+                        <h3 class="text-slate-500 text-xs md:text-sm font-semibold mb-1">Acuerdos en Ejecución</h3>
+                        <p class="text-xl md:text-2xl font-bold text-slate-800" id="kpi-ejecucion">...</p>
+                        <p class="text-[10px] md:text-xs text-slate-400 mt-2">Plazo COB: 90 días</p>
                     </div>
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-red-500">
-                        <h3 class="text-slate-500 text-sm font-semibold mb-1">Tipo de Cambio (BCB)</h3>
-                        <p class="text-2xl font-bold text-slate-800">Bs 9.73</p>
-                        <p class="text-xs text-red-600 mt-2">Flexibilización del mercado</p>
+                    <div class="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-red-500">
+                        <h3 class="text-slate-500 text-xs md:text-sm font-semibold mb-1">Tipo de Cambio (BCB)</h3>
+                        <p class="text-xl md:text-2xl font-bold text-slate-800">Bs 9.73</p>
+                        <p class="text-[10px] md:text-xs text-red-600 mt-2">Flexibilización del mercado</p>
                     </div>
                 </div>
 
                 <!-- Gráficos y Tablas -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
                     <!-- Avance Financiero -->
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-2">
-                        <h3 class="text-lg font-bold text-slate-800 mb-4">Ejecución Financiera por Sector (Millones $us)</h3>
-                        <div class="relative h-64 w-full">
+                    <div class="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-2">
+                        <h3 class="text-base md:text-lg font-bold text-slate-800 mb-4 line-clamp-1">Ejecución Financiera por Sector (Millones $us)</h3>
+                        <div class="relative h-48 md:h-64 w-full">
                             <canvas id="budgetChart"></canvas>
                         </div>
                     </div>
 
                     <!-- Alertas Rápidas -->
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                        <h3 class="text-lg font-bold text-slate-800 mb-4 text-red-600">
-                            <i class="fa-solid fa-triangle-exclamation"></i> Monitoreo de Riesgos y DS
+                    <div class="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                        <h3 class="text-base md:text-lg font-bold text-slate-800 mb-4 text-red-600 flex items-center gap-2">
+                            <i class="fa-solid fa-triangle-exclamation"></i> <span class="line-clamp-1">Monitoreo y DS</span>
                         </h3>
-                        <ul class="space-y-4">
+                        <ul class="space-y-3 md:space-y-4">
                             <li class="p-3 bg-red-50 rounded-lg border border-red-100">
-                                <div class="flex justify-between items-start mb-1">
-                                    <span class="font-bold text-sm text-red-800">Trópico de Cochabamba</span>
-                                    <span class="text-xs bg-red-200 text-red-800 px-2 rounded">Alta</span>
+                                <div class="flex justify-between items-start mb-1 gap-2">
+                                    <span class="font-bold text-xs md:text-sm text-red-800 leading-tight">Trópico de Cochabamba</span>
+                                    <span class="text-[10px] md:text-xs bg-red-200 text-red-800 px-2 py-0.5 rounded shrink-0">Alta</span>
                                 </div>
-                                <p class="text-xs text-slate-600">Facciones radicales evistas aisladas. Aplicación estricta del DS 5636 (Estado de Excepción).</p>
+                                <p class="text-[10px] md:text-xs text-slate-600">Facciones radicales evistas aisladas. Aplicación estricta del DS 5636 (Estado de Excepción).</p>
                             </li>
                             <li class="p-3 bg-amber-50 rounded-lg border border-amber-100">
-                                <div class="flex justify-between items-start mb-1">
-                                    <span class="font-bold text-sm text-amber-800">Asamblea Legislativa</span>
-                                    <span class="text-xs bg-amber-200 text-amber-800 px-2 rounded">Media</span>
+                                <div class="flex justify-between items-start mb-1 gap-2">
+                                    <span class="font-bold text-xs md:text-sm text-amber-800 leading-tight">Asamblea Legislativa</span>
+                                    <span class="text-[10px] md:text-xs bg-amber-200 text-amber-800 px-2 py-0.5 rounded shrink-0">Media</span>
                                 </div>
-                                <p class="text-xs text-slate-600">Pendiente aprobación de créditos CAF ($125M) logrados por Min. Obras Públicas.</p>
+                                <p class="text-[10px] md:text-xs text-slate-600">Pendiente aprobación de créditos CAF ($125M) logrados por Min. Obras Públicas.</p>
                             </li>
                             <li class="p-3 bg-blue-50 rounded-lg border border-blue-100">
-                                <div class="flex justify-between items-start mb-1">
-                                    <span class="font-bold text-sm text-blue-800">Sistema Financiero</span>
-                                    <span class="text-xs bg-blue-200 text-blue-800 px-2 rounded">Controlado</span>
+                                <div class="flex justify-between items-start mb-1 gap-2">
+                                    <span class="font-bold text-xs md:text-sm text-blue-800 leading-tight">Sistema Financiero</span>
+                                    <span class="text-[10px] md:text-xs bg-blue-200 text-blue-800 px-2 py-0.5 rounded shrink-0">Controlado</span>
                                 </div>
-                                <p class="text-xs text-slate-600">ASFI supervisando reprogramaciones bajo DS 5630. Retiro de depósitos fluyendo.</p>
+                                <p class="text-[10px] md:text-xs text-slate-600">ASFI supervisando reprogramaciones bajo DS 5630. Retiro de depósitos fluyendo.</p>
                             </li>
                         </ul>
                     </div>
@@ -180,12 +192,12 @@
 
             <!-- VISTA: MONITOR DE ACUERDOS -->
             <div id="view-acuerdos" class="view-section hidden fade-in">
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-6">
-                    <div class="flex flex-col md:flex-row justify-between items-center mb-6">
-                        <h3 class="text-lg font-bold text-slate-800">Monitor de Cumplimiento</h3>
-                        <div class="flex space-x-2 mt-4 md:mt-0">
-                            <input type="text" id="search-acuerdos" placeholder="Buscar acuerdo..." class="px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:border-presidencia-gold">
-                            <select class="px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none" id="filter-status">
+                <div class="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-slate-200 mb-6">
+                    <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-6 gap-4">
+                        <h3 class="text-base md:text-lg font-bold text-slate-800">Monitor de Cumplimiento</h3>
+                        <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 w-full xl:w-auto">
+                            <input type="text" id="search-acuerdos" placeholder="Buscar acuerdo..." class="px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:border-presidencia-gold w-full sm:w-auto">
+                            <select class="px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none w-full sm:w-auto" id="filter-status">
                                 <option value="all">Todos los estados</option>
                                 <option value="completado">Completado</option>
                                 <option value="ejecucion">En Ejecución</option>
@@ -194,10 +206,10 @@
                         </div>
                     </div>
 
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse">
+                    <div class="overflow-x-auto w-full -mx-4 md:mx-0 px-4 md:px-0">
+                        <table class="w-full min-w-[700px] text-left border-collapse">
                             <thead>
-                                <tr class="bg-slate-50 text-slate-500 text-sm uppercase tracking-wider">
+                                <tr class="bg-slate-50 text-slate-500 text-xs md:text-sm uppercase tracking-wider">
                                     <th class="p-3 border-b border-slate-200 font-semibold">Sector / Convenio</th>
                                     <th class="p-3 border-b border-slate-200 font-semibold">Ministerio Responsable</th>
                                     <th class="p-3 border-b border-slate-200 font-semibold">Presupuesto</th>
@@ -206,7 +218,7 @@
                                     <th class="p-3 border-b border-slate-200 font-semibold text-center">Acción</th>
                                 </tr>
                             </thead>
-                            <tbody id="acuerdos-tbody" class="text-sm">
+                            <tbody id="acuerdos-tbody" class="text-xs md:text-sm">
                                 <!-- Llenado por JS -->
                             </tbody>
                         </table>
@@ -216,17 +228,17 @@
 
             <!-- VISTA: MINISTERIOS -->
             <div id="view-ministerios" class="view-section hidden fade-in">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="ministerios-grid">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6" id="ministerios-grid">
                     <!-- Llenado por JS -->
                 </div>
             </div>
 
             <!-- VISTA: PROXIMOS DIALOGOS -->
             <div id="view-proximos" class="view-section hidden fade-in">
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                    <h3 class="text-lg font-bold text-slate-800 mb-6">Agenda Presidencial de Diálogo</h3>
+                <div class="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-base md:text-lg font-bold text-slate-800 mb-6">Agenda Presidencial de Diálogo</h3>
                     
-                    <div class="relative border-l-2 border-slate-200 ml-4 space-y-8" id="agenda-timeline">
+                    <div class="relative border-l-2 border-slate-200 ml-2 md:ml-4 space-y-6 md:space-y-8" id="agenda-timeline">
                         <!-- Llenado por JS -->
                     </div>
                 </div>
@@ -237,31 +249,34 @@
 
     <!-- Modal Detalles (Oculto por defecto) -->
     <div id="detail-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-50 z-[60] flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-6 relative">
-            <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-800">
-                <i class="fa-solid fa-xmark text-xl"></i>
+        <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-[95%] md:w-full p-4 md:p-6 relative max-h-[90vh] flex flex-col">
+            <button onclick="closeModal()" class="absolute top-3 right-3 md:top-4 md:right-4 text-slate-400 hover:text-slate-800 bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-sm border border-slate-100 z-10">
+                <i class="fa-solid fa-xmark text-lg"></i>
             </button>
-            <h2 id="modal-title" class="text-2xl font-bold text-slate-800 mb-2">Detalle del Acuerdo</h2>
-            <p id="modal-sector" class="text-presidencia-gold font-semibold text-sm mb-4">Sector</p>
-            
-            <div class="grid grid-cols-2 gap-4 mb-6">
-                <div class="bg-slate-50 p-3 rounded border border-slate-200">
-                    <p class="text-xs text-slate-500 mb-1">Monto Asignado</p>
-                    <p id="modal-monto" class="font-bold text-lg text-slate-800"></p>
+            <div class="overflow-y-auto pr-2">
+                <h2 id="modal-title" class="text-xl md:text-2xl font-bold text-slate-800 mb-2 pr-6">Detalle del Acuerdo</h2>
+                <p id="modal-sector" class="text-presidencia-gold font-semibold text-xs md:text-sm mb-4">Sector</p>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 mb-6">
+                    <div class="bg-slate-50 p-3 rounded border border-slate-200">
+                        <p class="text-[10px] md:text-xs text-slate-500 mb-1">Monto Asignado</p>
+                        <p id="modal-monto" class="font-bold text-base md:text-lg text-slate-800"></p>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded border border-slate-200">
+                        <p class="text-[10px] md:text-xs text-slate-500 mb-1">Ministerio Ejecutor</p>
+                        <p id="modal-ministerio" class="font-bold text-xs md:text-sm text-slate-800"></p>
+                    </div>
                 </div>
-                <div class="bg-slate-50 p-3 rounded border border-slate-200">
-                    <p class="text-xs text-slate-500 mb-1">Ministerio Ejecutor</p>
-                    <p id="modal-ministerio" class="font-bold text-sm text-slate-800"></p>
-                </div>
+                
+                <h4 class="font-bold text-slate-700 mb-2 border-b pb-1 text-sm md:text-base">Compromisos Específicos</h4>
+                <ul id="modal-compromisos" class="list-disc pl-5 space-y-2 text-xs md:text-sm text-slate-600 mb-6">
+                </ul>
             </div>
             
-            <h4 class="font-bold text-slate-700 mb-2 border-b pb-1">Compromisos Específicos</h4>
-            <ul id="modal-compromisos" class="list-disc pl-5 space-y-2 text-sm text-slate-600 mb-6">
-            </ul>
-
-            <div class="flex justify-end space-x-3">
-                <button class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded transition" onclick="closeModal()">Cerrar</button>
-                <a id="modal-acta-btn" href="#" target="_blank" class="px-4 py-2 bg-presidencia-900 hover:bg-presidencia-800 text-white rounded transition flex items-center">
+            <!-- Botones de Acción (Apilables en móvil) -->
+            <div class="flex flex-col sm:flex-row justify-end gap-3 mt-4 pt-4 border-t border-slate-100 shrink-0">
+                <button class="w-full sm:w-auto px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded transition font-medium text-sm text-center" onclick="closeModal()">Cerrar</button>
+                <a id="modal-acta-btn" href="#" target="_blank" class="w-full sm:w-auto px-4 py-2.5 bg-presidencia-900 hover:bg-presidencia-800 text-white rounded transition flex items-center justify-center font-medium text-sm">
                     <i class="fa-solid fa-file-pdf mr-2"></i>Ver Documento
                 </a>
             </div>
@@ -270,31 +285,31 @@
 
     <!-- Modal Ministerio (Oculto por defecto) -->
     <div id="ministerio-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl max-w-3xl w-full p-6 relative max-h-[90vh] flex flex-col">
-            <button onclick="closeMinisterioModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-800">
-                <i class="fa-solid fa-xmark text-xl"></i>
+        <div class="bg-white rounded-xl shadow-2xl max-w-3xl w-[95%] md:w-full p-4 md:p-6 relative max-h-[90vh] flex flex-col">
+            <button onclick="closeMinisterioModal()" class="absolute top-3 right-3 md:top-4 md:right-4 text-slate-400 hover:text-slate-800 bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-sm border border-slate-100 z-10">
+                <i class="fa-solid fa-xmark text-lg"></i>
             </button>
             
-            <div class="flex items-center mb-6 border-b border-slate-100 pb-4">
-                <div id="min-modal-icon" class="w-12 h-12 bg-slate-100 text-presidencia-800 rounded-full flex items-center justify-center text-xl mr-4 shadow-sm">
+            <div class="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left mb-4 md:mb-6 border-b border-slate-100 pb-4">
+                <div id="min-modal-icon" class="w-12 h-12 md:w-16 md:h-16 bg-slate-100 text-presidencia-800 rounded-full flex items-center justify-center text-xl md:text-2xl mx-auto sm:mx-0 sm:mr-4 shadow-sm mb-2 sm:mb-0 shrink-0">
                     <i class="fa-solid fa-building"></i>
                 </div>
-                <div>
-                    <h2 id="min-modal-title" class="text-2xl font-bold text-slate-800">Ministerio</h2>
-                    <p id="min-modal-titular" class="text-slate-500 font-medium text-sm mt-1"></p>
+                <div class="pr-0 sm:pr-8">
+                    <h2 id="min-modal-title" class="text-xl md:text-2xl font-bold text-slate-800">Ministerio</h2>
+                    <p id="min-modal-titular" class="text-slate-500 font-medium text-xs md:text-sm mt-1"></p>
                 </div>
             </div>
 
-            <h4 class="font-bold text-slate-700 mb-3 border-l-4 border-presidencia-gold pl-2">Acuerdos y Compromisos Bajo su Gestión</h4>
+            <h4 class="font-bold text-slate-700 mb-3 border-l-4 border-presidencia-gold pl-2 text-sm md:text-base">Acuerdos y Compromisos Bajo su Gestión</h4>
             
-            <div class="overflow-y-auto flex-1 pr-2">
-                <div id="min-modal-acuerdos-list" class="space-y-4">
+            <div class="overflow-y-auto flex-1 pr-1 md:pr-2">
+                <div id="min-modal-acuerdos-list" class="space-y-3 md:space-y-4">
                     <!-- Llenado por JS -->
                 </div>
             </div>
 
-            <div class="mt-6 pt-4 border-t border-slate-100 flex justify-end">
-                <button class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded transition font-medium" onclick="closeMinisterioModal()">Cerrar Panel</button>
+            <div class="mt-4 md:mt-6 pt-4 border-t border-slate-100 flex justify-end shrink-0">
+                <button class="w-full sm:w-auto px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded transition font-medium text-sm" onclick="closeMinisterioModal()">Cerrar Panel</button>
             </div>
         </div>
     </div>
@@ -326,7 +341,7 @@
             { nombre: "Ministerio de la Presidencia", titular: "José Luis Lupo", acuerdosAsignados: 1, presupuestoManejado: 85, icono: "fa-handshake" },
             { nombre: "Ministerio de Economía", titular: "José Gabriel Espinoza", acuerdosAsignados: 3, presupuestoManejado: 0, icono: "fa-chart-pie" },
             { nombre: "Min. de Obras Públicas", titular: "Mauricio Zamora", acuerdosAsignados: 1, presupuestoManejado: 125, icono: "fa-road" },
-            { nombre: "Ministerio de Educación", titular: "Erick Sanjinez Chavez", acuerdosAsignados: 1, presupuestoManejado: 0, icono: "fa-chalkboard-user" },
+            { nombre: "Ministerio de Educación", titular: "Erick Sanjinéz", acuerdosAsignados: 1, presupuestoManejado: 0, icono: "fa-chalkboard-user" },
             { nombre: "Ministerio de Gobierno", titular: "Marco Antonio Oviedo", acuerdosAsignados: 1, presupuestoManejado: 0, icono: "fa-shield-halved" },
             { nombre: "Ministerio de Hidrocarburos", titular: "Carlos Blanco", acuerdosAsignados: 1, presupuestoManejado: 0, icono: "fa-gas-pump" },
             { nombre: "Ministerio de Trabajo", titular: "Williams José Bascopé", acuerdosAsignados: 0, presupuestoManejado: 0, icono: "fa-hard-hat" }
@@ -354,12 +369,28 @@
             document.getElementById('current-time').textContent = now.toLocaleDateString('es-ES', options);
         }
 
+        // --- FUNCIONES RESPONSIVAS ---
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+
+        function closeSidebarMobile() {
+            if (window.innerWidth < 768) {
+                const sidebar = document.getElementById('sidebar');
+                if (!sidebar.classList.contains('-translate-x-full')) {
+                    toggleSidebar();
+                }
+            }
+        }
+
         async function fetchGoogleSheet(sheetName) {
             const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
             const res = await fetch(url);
             const text = await res.text();
             
-            // Extraer JSON crudo devuelto por Google Query API
             const start = text.indexOf('{');
             const end = text.lastIndexOf('}');
             const jsonString = text.substring(start, end + 1);
@@ -379,14 +410,12 @@
             }
 
             try {
-                // Fetch concurrente de las 3 hojas
                 const [rowsAcuerdos, rowsMin, rowsDial] = await Promise.all([
                     fetchGoogleSheet('Acuerdos'),
                     fetchGoogleSheet('Ministerios'),
                     fetchGoogleSheet('Dialogos')
                 ]);
                 
-                // Mapeo Hoja "Acuerdos" (Columnas: ID, Sector, Titulo, Min, Monto, Avance, Estado, Compromisos, ActaPDF)
                 datosAcuerdos = rowsAcuerdos.map(row => {
                     const c = row.c;
                     return {
@@ -402,7 +431,6 @@
                     };
                 });
 
-                // Mapeo Hoja "Ministerios" (Columnas: Nombre, Titular, Acuerdos, Presupuesto, Icono)
                 ministerios = rowsMin.map(row => {
                     const c = row.c;
                     return {
@@ -414,7 +442,6 @@
                     };
                 });
 
-                // Mapeo Hoja "Dialogos" (Columnas: Fecha, Sector, Tema, Estado)
                 proximosDialogos = rowsDial.map(row => {
                     const c = row.c;
                     return {
@@ -456,14 +483,10 @@
             const cerrados = datosAcuerdos.filter(a => a.estado === 'completado').length;
             const total = datosAcuerdos.length;
             const ejecucion = datosAcuerdos.filter(a => a.estado === 'ejecucion').length;
-            const alerta = datosAcuerdos.filter(a => a.estado === 'retraso').length;
 
             document.getElementById('kpi-presupuesto').textContent = `$us ${totalPto.toFixed(1)} M`;
             document.getElementById('kpi-cerrados').textContent = `${cerrados} / ${total}`;
             document.getElementById('kpi-ejecucion').textContent = ejecucion;
-            
-            const kpiAlertaEl = document.getElementById('kpi-alerta');
-            if(kpiAlertaEl) kpiAlertaEl.textContent = alerta;
         }
 
         function switchTab(tabId) {
@@ -481,12 +504,15 @@
             activeBtn.classList.remove('border-transparent');
 
             const titles = {
-                'dashboard': 'Resumen Ejecutivo - Post Crisis',
-                'acuerdos': 'Monitor de Cumplimiento de Acuerdos',
-                'ministerios': 'Gabinete Ministerial y Desempeño',
-                'proximos': 'Agenda Presidencial de Diálogos'
+                'dashboard': 'Resumen Ejecutivo',
+                'acuerdos': 'Monitor de Acuerdos',
+                'ministerios': 'Gabinete Ministerial',
+                'proximos': 'Agenda Presidencial'
             };
             document.getElementById('header-title').textContent = titles[tabId];
+            
+            // Cierra el sidebar en móviles al seleccionar una pestaña
+            closeSidebarMobile();
         }
 
         function renderAcuerdosTable(data) {
@@ -498,36 +524,36 @@
                 let progressColor = '';
                 
                 if (item.estado === 'completado') {
-                    statusBadge = '<span class="bg-emerald-100 text-emerald-800 px-2 py-1 rounded text-xs font-semibold">Completado</span>';
+                    statusBadge = '<span class="bg-emerald-100 text-emerald-800 px-2 py-1 rounded text-[10px] md:text-xs font-semibold">Completado</span>';
                     progressColor = 'bg-emerald-500';
                 } else if (item.estado === 'ejecucion') {
-                    statusBadge = '<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-semibold">En Ejecución</span>';
+                    statusBadge = '<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-[10px] md:text-xs font-semibold">Ejecución</span>';
                     progressColor = 'bg-blue-500';
                 } else {
-                    statusBadge = '<span class="bg-red-100 text-red-800 px-2 py-1 rounded text-xs font-semibold">Retraso</span>';
+                    statusBadge = '<span class="bg-red-100 text-red-800 px-2 py-1 rounded text-[10px] md:text-xs font-semibold">Retraso</span>';
                     progressColor = 'bg-red-500';
                 }
 
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-slate-50 border-b border-slate-100 transition';
                 tr.innerHTML = `
-                    <td class="p-3">
-                        <p class="font-bold text-slate-800">${item.sector}</p>
-                        <p class="text-xs text-slate-500">${item.titulo}</p>
+                    <td class="p-2 md:p-3">
+                        <p class="font-bold text-slate-800 text-xs md:text-sm line-clamp-2 md:line-clamp-none">${item.sector}</p>
+                        <p class="text-[10px] md:text-xs text-slate-500 line-clamp-1">${item.titulo}</p>
                     </td>
-                    <td class="p-3 text-slate-600">${item.ministerio}</td>
-                    <td class="p-3 font-semibold text-slate-700">$us ${item.monto} M</td>
-                    <td class="p-3">
-                        <div class="flex items-center gap-2">
-                            <div class="w-full bg-slate-200 rounded-full h-2.5">
-                                <div class="${progressColor} h-2.5 rounded-full transition-all duration-1000" style="width: ${item.avance}%"></div>
+                    <td class="p-2 md:p-3 text-slate-600 text-[10px] md:text-sm">${item.ministerio}</td>
+                    <td class="p-2 md:p-3 font-semibold text-slate-700 text-xs md:text-sm whitespace-nowrap">$us ${item.monto} M</td>
+                    <td class="p-2 md:p-3 min-w-[120px]">
+                        <div class="flex items-center gap-1 md:gap-2">
+                            <div class="w-full bg-slate-200 rounded-full h-1.5 md:h-2.5">
+                                <div class="${progressColor} h-1.5 md:h-2.5 rounded-full transition-all duration-1000" style="width: ${item.avance}%"></div>
                             </div>
-                            <span class="text-xs font-bold text-slate-600">${item.avance}%</span>
+                            <span class="text-[10px] md:text-xs font-bold text-slate-600 w-8 text-right">${item.avance}%</span>
                         </div>
                     </td>
-                    <td class="p-3">${statusBadge}</td>
-                    <td class="p-3 text-center">
-                        <button onclick="openModal('${item.id}')" class="text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-2 rounded transition">
+                    <td class="p-2 md:p-3">${statusBadge}</td>
+                    <td class="p-2 md:p-3 text-center">
+                        <button onclick="openModal('${item.id}')" class="text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-1.5 md:p-2 rounded transition">
                             <i class="fa-solid fa-eye"></i>
                         </button>
                     </td>
@@ -555,21 +581,21 @@
 
             ministerios.forEach(min => {
                 grid.innerHTML += `
-                    <div onclick="openMinisterioModal('${min.nombre}')" class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col items-center text-center hover:shadow-md hover:border-presidencia-gold cursor-pointer transition transform hover:-translate-y-1">
-                        <div class="w-16 h-16 bg-slate-100 text-presidencia-800 rounded-full flex items-center justify-center text-2xl mb-4">
+                    <div onclick="openMinisterioModal('${min.nombre}')" class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-6 flex flex-col items-center text-center hover:shadow-md hover:border-presidencia-gold cursor-pointer transition transform hover:-translate-y-1">
+                        <div class="w-12 h-12 md:w-16 md:h-16 bg-slate-100 text-presidencia-800 rounded-full flex items-center justify-center text-xl md:text-2xl mb-3 md:mb-4">
                             <i class="fa-solid ${min.icono}"></i>
                         </div>
-                        <h3 class="font-bold text-lg text-slate-800 mb-1">${min.nombre}</h3>
-                        <p class="text-sm text-slate-500 mb-4">${min.titular}</p>
+                        <h3 class="font-bold text-base md:text-lg text-slate-800 mb-1 leading-tight">${min.nombre}</h3>
+                        <p class="text-xs md:text-sm text-slate-500 mb-4">${min.titular}</p>
                         
-                        <div class="w-full grid grid-cols-2 gap-2 mt-auto border-t border-slate-100 pt-4">
+                        <div class="w-full grid grid-cols-2 gap-2 mt-auto border-t border-slate-100 pt-3 md:pt-4">
                             <div>
-                                <p class="text-xs text-slate-400">Acuerdos Activos</p>
-                                <p class="font-bold text-slate-700">${min.acuerdosAsignados}</p>
+                                <p class="text-[10px] md:text-xs text-slate-400">Acuerdos Activos</p>
+                                <p class="font-bold text-sm md:text-base text-slate-700">${min.acuerdosAsignados}</p>
                             </div>
                             <div>
-                                <p class="text-xs text-slate-400">Pto. (MM USD)</p>
-                                <p class="font-bold text-slate-700">$${min.presupuestoManejado}</p>
+                                <p class="text-[10px] md:text-xs text-slate-400">Pto. (MM USD)</p>
+                                <p class="font-bold text-sm md:text-base text-slate-700">$${min.presupuestoManejado}</p>
                             </div>
                         </div>
                     </div>
@@ -586,14 +612,14 @@
                 const badgeColor = isConfirmado ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800';
                 
                 timeline.innerHTML += `
-                    <div class="relative pl-6">
-                        <div class="absolute w-4 h-4 bg-presidencia-gold rounded-full -left-[9px] top-1 border-4 border-white"></div>
-                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 hover:shadow-sm transition">
-                            <span class="text-xs font-bold text-presidencia-gold mb-1 block">${dialogo.fecha}</span>
-                            <h4 class="font-bold text-slate-800 text-lg">${dialogo.sector}</h4>
-                            <p class="text-sm text-slate-600 mt-1"><i class="fa-solid fa-comments text-slate-400 mr-1"></i> ${dialogo.tema}</p>
-                            <div class="mt-3">
-                                <span class="px-2 py-1 rounded text-xs font-semibold ${badgeColor}">${dialogo.estado}</span>
+                    <div class="relative pl-4 md:pl-6">
+                        <div class="absolute w-3 h-3 md:w-4 md:h-4 bg-presidencia-gold rounded-full -left-[7px] md:-left-[9px] top-1.5 md:top-1 border-[3px] md:border-4 border-white"></div>
+                        <div class="bg-slate-50 p-3 md:p-4 rounded-lg border border-slate-200 hover:shadow-sm transition">
+                            <span class="text-[10px] md:text-xs font-bold text-presidencia-gold mb-1 block">${dialogo.fecha}</span>
+                            <h4 class="font-bold text-slate-800 text-sm md:text-lg leading-tight">${dialogo.sector}</h4>
+                            <p class="text-xs md:text-sm text-slate-600 mt-1"><i class="fa-solid fa-comments text-slate-400 mr-1"></i> ${dialogo.tema}</p>
+                            <div class="mt-2 md:mt-3">
+                                <span class="px-2 py-1 rounded text-[10px] md:text-xs font-semibold ${badgeColor}">${dialogo.estado}</span>
                             </div>
                         </div>
                     </div>
@@ -616,7 +642,6 @@
                 if(c.trim() !== "") lista.innerHTML += `<li>${c}</li>`;
             });
 
-            // Lógica para mostrar u ocultar el botón del PDF
             const btnActa = document.getElementById('modal-acta-btn');
             if (acuerdo.acta && acuerdo.acta !== '#' && acuerdo.acta.trim() !== '') {
                 btnActa.href = acuerdo.acta;
@@ -642,12 +667,10 @@
             const min = ministerios.find(m => m.nombre === nombreMinisterio);
             if (!min) return;
 
-            // Llenar cabecera del modal
             document.getElementById('min-modal-title').textContent = min.nombre;
             document.getElementById('min-modal-titular').innerHTML = `<i class="fa-solid fa-user-tie mr-1"></i> ${min.titular}`;
             document.getElementById('min-modal-icon').innerHTML = `<i class="fa-solid ${min.icono}"></i>`;
 
-            // Mapeo inteligente de palabras clave para vincular ministerios con acuerdos
             const keywordMap = {
                 "Ministerio de la Presidencia": "Presidencia",
                 "Ministerio de Economía": "Economía",
@@ -660,7 +683,6 @@
             
             const keyword = keywordMap[min.nombre] || min.nombre;
             
-            // Filtrar acuerdos que incluyan la palabra clave en el campo ministerio
             const acuerdosFiltrados = datosAcuerdos.filter(a => a.ministerio.includes(keyword));
             
             const lista = document.getElementById('min-modal-acuerdos-list');
@@ -668,45 +690,47 @@
 
             if (acuerdosFiltrados.length === 0) {
                 lista.innerHTML = `
-                    <div class="p-8 bg-slate-50 rounded-lg text-center border border-slate-200 mt-4">
-                        <i class="fa-solid fa-folder-open text-slate-300 text-4xl mb-3"></i>
-                        <p class="text-slate-500 text-sm font-medium">No hay acuerdos directos registrados bajo la gestión de este ministerio en este momento.</p>
+                    <div class="p-6 md:p-8 bg-slate-50 rounded-lg text-center border border-slate-200 mt-4">
+                        <i class="fa-solid fa-folder-open text-slate-300 text-3xl md:text-4xl mb-2 md:mb-3"></i>
+                        <p class="text-slate-500 text-xs md:text-sm font-medium px-4">No hay acuerdos directos registrados bajo la gestión de este ministerio en este momento.</p>
                     </div>`;
             } else {
                 acuerdosFiltrados.forEach(acuerdo => {
                     let statusBadge = '';
                     let progressColor = '';
                     if (acuerdo.estado === 'completado') {
-                        statusBadge = '<span class="bg-emerald-100 text-emerald-800 px-2 py-1 rounded text-xs font-semibold">Completado</span>';
+                        statusBadge = '<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 md:py-1 rounded text-[10px] md:text-xs font-semibold">Completado</span>';
                         progressColor = 'bg-emerald-500';
                     } else if (acuerdo.estado === 'ejecucion') {
-                        statusBadge = '<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-semibold">En Ejecución</span>';
+                        statusBadge = '<span class="bg-blue-100 text-blue-800 px-2 py-0.5 md:py-1 rounded text-[10px] md:text-xs font-semibold">Ejecución</span>';
                         progressColor = 'bg-blue-500';
                     } else {
-                        statusBadge = '<span class="bg-red-100 text-red-800 px-2 py-1 rounded text-xs font-semibold">Retraso</span>';
+                        statusBadge = '<span class="bg-red-100 text-red-800 px-2 py-0.5 md:py-1 rounded text-[10px] md:text-xs font-semibold">Retraso</span>';
                         progressColor = 'bg-red-500';
                     }
 
-                    // Se puede hacer clic en la tarjeta del acuerdo para abrir su detalle específico
                     lista.innerHTML += `
-                        <div class="border border-slate-200 rounded-lg p-4 bg-white hover:border-blue-400 hover:shadow-md transition cursor-pointer relative overflow-hidden group" onclick="openModal('${acuerdo.id}')">
+                        <div class="border border-slate-200 rounded-lg p-3 md:p-4 bg-white hover:border-blue-400 hover:shadow-md transition cursor-pointer relative overflow-hidden group" onclick="openModal('${acuerdo.id}')">
                             <div class="absolute right-0 top-0 h-full w-1 bg-blue-500 transform translate-x-1 group-hover:translate-x-0 transition"></div>
-                            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-3 gap-2">
-                                <div>
-                                    <h5 class="font-bold text-slate-800 text-sm">${acuerdo.sector}</h5>
-                                    <p class="text-xs text-slate-500 mt-1 line-clamp-1">${acuerdo.titulo}</p>
+                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2 md:mb-3 gap-2">
+                                <div class="w-full sm:w-auto">
+                                    <div class="flex justify-between items-start sm:block w-full">
+                                       <h5 class="font-bold text-slate-800 text-xs md:text-sm pr-2 leading-tight">${acuerdo.sector}</h5>
+                                       <div class="shrink-0 sm:hidden">${statusBadge}</div>
+                                    </div>
+                                    <p class="text-[10px] md:text-xs text-slate-500 mt-1 line-clamp-2 md:line-clamp-1">${acuerdo.titulo}</p>
                                 </div>
-                                <div class="shrink-0">${statusBadge}</div>
+                                <div class="shrink-0 hidden sm:block">${statusBadge}</div>
                             </div>
-                            <div class="flex items-center gap-4 mt-2 p-2 bg-slate-50 rounded">
-                                <div class="text-xs font-semibold text-slate-700 whitespace-nowrap">
+                            <div class="flex items-center gap-3 md:gap-4 mt-2 p-2 bg-slate-50 rounded">
+                                <div class="text-[10px] md:text-xs font-semibold text-slate-700 whitespace-nowrap">
                                     <i class="fa-solid fa-sack-dollar text-slate-400 mr-1"></i> $us ${acuerdo.monto} M
                                 </div>
                                 <div class="flex-1 flex items-center gap-2">
-                                    <div class="w-full bg-slate-200 rounded-full h-1.5">
-                                        <div class="${progressColor} h-1.5 rounded-full" style="width: ${acuerdo.avance}%"></div>
+                                    <div class="w-full bg-slate-200 rounded-full h-1 md:h-1.5">
+                                        <div class="${progressColor} h-1 md:h-1.5 rounded-full" style="width: ${acuerdo.avance}%"></div>
                                     </div>
-                                    <span class="text-[10px] font-bold text-slate-500 w-6">${acuerdo.avance}%</span>
+                                    <span class="text-[9px] md:text-[10px] font-bold text-slate-500 w-5 md:w-6 text-right">${acuerdo.avance}%</span>
                                 </div>
                             </div>
                         </div>
@@ -731,7 +755,7 @@
             }
 
             const ctx = document.getElementById('budgetChart').getContext('2d');
-            const labels = datosAcuerdos.map(a => a.sector.substring(0, 15) + '...');
+            const labels = datosAcuerdos.map(a => a.sector.substring(0, window.innerWidth < 768 ? 10 : 15) + '...');
             const datos = datosAcuerdos.map(a => a.monto);
 
             chartInstance = new Chart(ctx, {
@@ -739,11 +763,11 @@
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'Presupuesto Asignado (Millones $us)',
+                        label: 'Presupuesto ($us M)',
                         data: datos,
                         backgroundColor: '#3b82f6', 
                         borderRadius: 4,
-                        barThickness: 30
+                        barThickness: window.innerWidth < 768 ? 15 : 30
                     }]
                 },
                 options: {
@@ -755,15 +779,34 @@
                     scales: {
                         y: {
                             beginAtZero: true,
-                            grid: { color: '#f1f5f9' }
+                            grid: { color: '#f1f5f9' },
+                            ticks: {
+                                font: {
+                                    size: window.innerWidth < 768 ? 10 : 12
+                                }
+                            }
                         },
                         x: {
-                            grid: { display: false }
+                            grid: { display: false },
+                            ticks: {
+                                font: {
+                                    size: window.innerWidth < 768 ? 9 : 12
+                                },
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
                         }
                     }
                 }
             });
         }
+        
+        // Redibujar gráfico al cambiar tamaño de pantalla para adaptar responsividad
+        window.addEventListener('resize', () => {
+             if(document.getElementById('view-dashboard').classList.contains('hidden') === false) {
+                 initChart();
+             }
+        });
     </script>
 </body>
 </html>
